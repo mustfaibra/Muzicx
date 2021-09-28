@@ -1,6 +1,5 @@
 package com.example.muzicx
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -24,7 +22,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import coil.compose.rememberImagePainter
 import com.example.muzicx.model.MyTrack
 import com.example.muzicx.ui.theme.MuzicxTheme
 
@@ -123,7 +120,7 @@ fun TabItem(
         )
         Box(
             modifier = Modifier
-                .width(50.dp)
+                .width(40.dp)
                 .height(4.dp)
                 .clip(CircleShape)
                 .background(
@@ -153,15 +150,11 @@ fun TrackItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceAround
     ){
-        Image(
-            painter = rememberImagePainter(
-                data = track.md5Image
-            ),
+        Box(
             modifier = Modifier
                 .size(50.dp)
-                .clip(CircleShape),
-            contentDescription = track.titleShort,
-            contentScale = ContentScale.Crop
+                .clip(CircleShape)
+                .background(track.cover),
         )
         Spacer(modifier = Modifier.width(15.dp))
         Column(

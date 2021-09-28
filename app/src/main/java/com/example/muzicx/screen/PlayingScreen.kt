@@ -31,8 +31,6 @@ import com.example.muzicx.CustomButton
 import com.example.muzicx.R
 import com.example.muzicx.model.MyTrack
 import com.example.muzicx.ui.theme.MuzicxTheme
-import java.text.DateFormat
-import java.time.format.DateTimeFormatter
 
 @Preview
 @Composable
@@ -128,7 +126,7 @@ fun TrackInfoSection(
     ) {
         Image(
             painter = rememberImagePainter(
-                data = track.md5Image,
+                data = track.cover,
                 builder = {
                     transformations(CircleCropTransformation())
                 }

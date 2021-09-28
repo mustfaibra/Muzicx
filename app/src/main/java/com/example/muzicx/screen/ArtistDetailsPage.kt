@@ -37,10 +37,7 @@ import com.example.muzicx.R
 import com.example.muzicx.SecondaryTopBar
 import com.example.muzicx.TabItem
 import com.example.muzicx.TrackItem
-import com.example.muzicx.model.Artist
-import com.example.muzicx.model.ArtistDetails
-import com.example.muzicx.model.MyAlbum
-import com.example.muzicx.model.MyTrack
+import com.example.muzicx.model.*
 import com.example.muzicx.viewmodel.ArtistDetailsVM
 
 @Composable
@@ -54,7 +51,17 @@ fun ArtistDetailsPage(
             .fillMaxSize()
             .background(MaterialTheme.colors.background),
     ){
+        val loading by remember {
+            detailsVM.loading
+        }
+        val error by remember {
+            detailsVM.error
+        }
+        val details by detailsVM.details.observeAsState()
 
+        if (loading) {
+            detailsVM.getArtistDetails(artistId)
+        }
         SecondaryTopBar(
             title = "Artist's Profile",
             onBackClicked = {
@@ -66,16 +73,6 @@ fun ArtistDetailsPage(
         )
         // Here is the actual content of the page :
         Box(modifier = Modifier.fillMaxSize()) {
-            val details by detailsVM.getArtistDetails(artistId).let {
-                detailsVM.details.observeAsState()
-            }
-            val loading by remember {
-                detailsVM.loading
-            }
-            val error by remember {
-                detailsVM.error
-            }
-
             if (details == null) {
                 // if its null , it mean that its still loading or network error occured !
                 if (loading) {
@@ -131,12 +128,15 @@ fun DetailsPageContent(details: ArtistDetails) {
             }
         )
         // now show the content depending on the current tab
-        TabsContent(current,albums)
+        TabsContent(current,details)
     }
 }
 
 @Composable
-fun TabsContent(current: Int, albums: List<MyAlbum>) {
+fun TabsContent(current: Int, details: ArtistDetails) {
+    val albums = details.albums.data
+    val reviews = details.reviews ?: mutableListOf()
+    val contacts = details.contacts ?: mutableListOf()
     when(current){
         0 -> {
             // show all songs
@@ -153,6 +153,79 @@ fun TabsContent(current: Int, albums: List<MyAlbum>) {
             // show all albums
             AlbumsTab(albums)
         }
+        2 -> {
+            // show all reviews
+            ReviewsTab(reviews)
+        }
+        3 -> {
+            // show all contacts
+            ContactsTab(contacts)
+        }
+    }
+}
+
+@Composable
+fun ContactsTab(contacts: List<Contact>) {
+    if (contacts.isEmpty()){
+        Box(modifier = Modifier.fillMaxSize()) {
+            Text(
+                text = "No contacts for this artist !",
+                modifier = Modifier.align(Alignment.Center),
+                color = MaterialTheme.colors.onBackground,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+fun ReviewsTab(reviews: List<Review>) {
+    LazyColumn{
+        items(reviews){review->
+            ReviewItem(review = review )
+        }
+    }
+}
+
+@Composable
+fun ReviewItem(
+    modifier: Modifier = Modifier,
+    review: Review,
+){
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(Color.Transparent)
+            .clickable {
+            }
+            .padding(horizontal = 20.dp, vertical = 10.dp) ,
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ){
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(review.profile)
+        )
+        Spacer(modifier = Modifier.width(15.dp))
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.SpaceAround
+        ) {
+            Text(
+                text = review.reviewerName,
+                style = MaterialTheme.typography.body1,
+                color = MaterialTheme.colors.onBackground,
+                maxLines = 1
+            )
+            Text(
+                text = review.review,
+                style = MaterialTheme.typography.body2,
+                color = MaterialTheme.colors.secondaryVariant,
+                maxLines = 1
+            )
+        }
     }
 }
 
@@ -162,6 +235,7 @@ fun SongsTab(tracks: MutableList<MyTrack>) {
         state = rememberLazyListState()
     ){
         items(tracks){track->
+
             var isAddedToCart by remember {
                 mutableStateOf(false)
             }
@@ -214,16 +288,11 @@ fun AlbumItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ){
-        Image(
-            painter = rememberImagePainter(
-                data = album.md5Image
-            ),
-            contentDescription = "profile",
+        Box(
             modifier = Modifier
                 .size(60.dp)
                 .clip(CircleShape)
-                .shadow(elevation = 2.dp, shape = CircleShape),
-            contentScale = ContentScale.Crop
+                .background(album.cover)
         )
         Spacer(modifier = Modifier.width(15.dp))
         Column(
@@ -299,7 +368,6 @@ fun ProfileHeaderSection(
             Text(
                 text = "Pro Seller".capitalize(Locale("en")),
                 modifier= Modifier
-                    .padding(bottom = 15.dp)
                     .border(2.dp, MaterialTheme.colors.primary, MaterialTheme.shapes.small)
                     .padding(horizontal = 15.dp, vertical = 7.dp),
                 color = MaterialTheme.colors.primary,

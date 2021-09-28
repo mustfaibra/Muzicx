@@ -1,7 +1,8 @@
 package com.example.muzicx.model
 
-
+import androidx.compose.ui.graphics.Color
 import com.google.gson.annotations.SerializedName
+import kotlin.random.Random
 
 data class MyTrack(
     @SerializedName("artist")
@@ -11,19 +12,20 @@ data class MyTrack(
     @SerializedName("id")
     val id: Int,
     @SerializedName("link")
-    val link: String,
+    val link: String = "",
     @SerializedName("md5_image")
-    val md5Image: String,
+    val cover: Color = Color(
+        Random.nextFloat(),
+        Random.nextFloat(),
+        Random.nextFloat(),
+        1f
+    ),
     @SerializedName("preview")
-    val preview: String,
+    val preview: String = "",
     @SerializedName("rank")
-    val rank: Int,
+    val rank: Int = Random.nextInt(1,1000),
     @SerializedName("title")
     val title: String,
-    @SerializedName("title_short")
-    val titleShort: String,
-    @SerializedName("title_version")
-    val titleVersion: String,
     @SerializedName("type")
-    val type: String
+    val type: String = "track"
 )

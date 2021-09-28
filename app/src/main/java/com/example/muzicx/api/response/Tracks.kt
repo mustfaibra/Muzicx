@@ -6,5 +6,5 @@ import com.google.gson.annotations.SerializedName
 
 data class Tracks(
     @SerializedName("data")
-    val data: List<MyTrack>
+    val data: MutableList<MyTrack>
 )
