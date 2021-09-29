@@ -5,9 +5,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.muzicx.model.MyTrack
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 @HiltViewModel
-class ParentViewModel : ViewModel(){
+class ParentViewModel @Inject constructor() : ViewModel(){
     // the song that to be played in player screen
     private var _track = MutableLiveData<MyTrack>()
     val track: LiveData<MyTrack>
