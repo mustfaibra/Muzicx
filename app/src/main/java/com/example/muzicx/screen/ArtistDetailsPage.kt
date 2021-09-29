@@ -17,9 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.capitalize
@@ -38,7 +36,9 @@ import com.example.muzicx.SecondaryTopBar
 import com.example.muzicx.TabItem
 import com.example.muzicx.TrackItem
 import com.example.muzicx.model.*
+import com.example.muzicx.sealed.Screen
 import com.example.muzicx.viewmodel.ArtistDetailsVM
+import com.example.muzicx.viewmodel.PlayerScreenVM
 
 @Composable
 fun ArtistDetailsPage(
@@ -94,17 +94,23 @@ fun ArtistDetailsPage(
                 }
             } else {
                 // We got our details response from the server , we should use it now !
-                DetailsPageContent(details!!)
+                DetailsPageContent(details!!,navHostController)
             }
         }
     }
 }
 
 @Composable
-fun DetailsPageContent(details: ArtistDetails) {
+fun DetailsPageContent(details: ArtistDetails, navHostController: NavHostController) {
     Column(modifier = Modifier.fillMaxSize()) {
         val artist = details.artist
-        val albums = details.albums.data
+        val albumsCount = details.albums.data.size
+        var tracksCount = 0
+        details.albums.data.forEach {
+            tracksCount +=it.tracks.data.size
+        }
+        val subscribersCount = artist.fans
+
         var isSubscribed by remember {
             mutableStateOf(false)
         }
@@ -113,7 +119,10 @@ fun DetailsPageContent(details: ArtistDetails) {
         }
 
         ProfileHeaderSection(
-            artist = artist
+            artist = artist,
+            tracksCount = tracksCount,
+            albumsCount = albumsCount,
+            subscribersCount = subscribersCount
         )
         ProfileButtonsSection(
             isSubscribed = isSubscribed,
@@ -128,12 +137,12 @@ fun DetailsPageContent(details: ArtistDetails) {
             }
         )
         // now show the content depending on the current tab
-        TabsContent(current,details)
+        TabsContent(current,details,navHostController)
     }
 }
 
 @Composable
-fun TabsContent(current: Int, details: ArtistDetails) {
+fun TabsContent(current: Int, details: ArtistDetails,navController: NavHostController) {
     val albums = details.albums.data
     val reviews = details.reviews ?: mutableListOf()
     val contacts = details.contacts ?: mutableListOf()
@@ -147,7 +156,7 @@ fun TabsContent(current: Int, details: ArtistDetails) {
                     tracks.add(it)
                 }
             }
-            SongsTab(tracks)
+            SongsTab(tracks = tracks,navController = navController)
         }
         1 -> {
             // show all albums
@@ -219,6 +228,7 @@ fun ReviewItem(
                 color = MaterialTheme.colors.onBackground,
                 maxLines = 1
             )
+            Spacer(modifier = Modifier.height(1.dp))
             Text(
                 text = review.review,
                 style = MaterialTheme.typography.body2,
@@ -230,7 +240,11 @@ fun ReviewItem(
 }
 
 @Composable
-fun SongsTab(tracks: MutableList<MyTrack>) {
+fun SongsTab(
+    tracks: MutableList<MyTrack>,
+    navController: NavHostController,
+    playerScreenVM: PlayerScreenVM = hiltViewModel()
+) {
     LazyColumn(
         state = rememberLazyListState()
     ){
@@ -248,6 +262,8 @@ fun SongsTab(tracks: MutableList<MyTrack>) {
                 },
                 onTrackSelected = {
                     // go to track player page ...
+                    playerScreenVM.setSongToPlay(track = track)
+                    navController.navigate(Screen.Player.route)
                 },
                 onCartClicked = {
                     // update cart state ...
@@ -335,7 +351,10 @@ fun AlbumItem(
 
 @Composable
 fun ProfileHeaderSection(
-    artist: Artist
+    artist: Artist,
+    tracksCount: Int,
+    albumsCount: Int,
+    subscribersCount: Int,
 ){
     Row(
         modifier = Modifier
@@ -387,36 +406,36 @@ fun ProfileHeaderSection(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ){
-//                records.forEach{ record->
-//                    artistRecord(record)
-//                }
+                ArtistRecord(title = "Tracks", count = tracksCount )
+                ArtistRecord(title = "Albums", count = albumsCount)
+                ArtistRecord(title = "Subscribers", count = subscribersCount)
             }
         }
     }
 }
 
-//@Composable
-//fun artistRecord(record: ArtistRecords = ArtistRecords("Subscribers",12)) {
-//    Column(
-//        horizontalAlignment = Alignment.CenterHorizontally,
-//        verticalArrangement = Arrangement.SpaceAround
-//    ) {
-//        Text(
-//            text =
-//                if (record.count < 1000) "${record.count}"
-//                else "${record.count/1000}K",
-//            style = MaterialTheme.typography.body1,
-//            color = MaterialTheme.colors.onBackground,
-//        )
-//        Spacer(modifier = Modifier.height(5.dp))
-//        Text(
-//            text = record.title,
-//            style = MaterialTheme.typography.body2,
-//            color = MaterialTheme.colors.secondaryVariant,
-//            maxLines = 1
-//        )
-//    }
-//}
+@Composable
+fun ArtistRecord(title: String, count: Int) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceAround
+    ) {
+        Text(
+            text =
+                if (count < 1000) "$count"
+                else "${count/1000}K",
+            style = MaterialTheme.typography.body1,
+            color = MaterialTheme.colors.onBackground,
+        )
+        Spacer(modifier = Modifier.height(5.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.body2,
+            color = MaterialTheme.colors.secondaryVariant,
+            maxLines = 1
+        )
+    }
+}
 
 @Composable
 fun ProfileButtonsSection(

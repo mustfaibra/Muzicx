@@ -14,6 +14,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,90 +26,92 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import coil.compose.rememberImagePainter
 import coil.transform.CircleCropTransformation
 import com.example.muzicx.CustomButton
 import com.example.muzicx.R
 import com.example.muzicx.model.MyTrack
 import com.example.muzicx.ui.theme.MuzicxTheme
+import com.example.muzicx.viewmodel.PlayerScreenVM
 
-@Preview
 @Composable
 fun PlayScreen(
-
+    navcontroller: NavHostController,
+    playerVM: PlayerScreenVM = hiltViewModel()
 ){
+    val track by playerVM.track.observeAsState()
 
-    MuzicxTheme {
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colors.background)) {
-            Column(
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .background(MaterialTheme.colors.background)) {
+        Column(
+            modifier = Modifier
+                .padding(top = 30.dp)
+                .fillMaxSize()
+                .clip(RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp))
+                .background(MaterialTheme.colors.secondary)
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(
                 modifier = Modifier
-                    .padding(top = 30.dp)
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp))
-                    .background(MaterialTheme.colors.secondary)
-                    .padding(horizontal = 20.dp),
-                verticalArrangement = Arrangement.SpaceBetween,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Spacer(
-                    modifier = Modifier
-                        .padding(top = 10.dp, bottom = 50.dp)
-                        .height(5.dp)
-                        .width(50.dp)
-                        .clip(RoundedCornerShape(100.dp))
-                        .background(MaterialTheme.colors.secondaryVariant)
-                )
-//                TrackInfoSection(
-//                    modifier = Modifier.weight(1f) ,
-//                    track = MyTrack() ,
-//                    onMoreClicked = {
-//
-//                    }
-//                )
-                ControlSection(
-                    onPlayingToggle = {
+                    .padding(top = 10.dp, bottom = 50.dp)
+                    .height(5.dp)
+                    .width(50.dp)
+                    .clip(RoundedCornerShape(100.dp))
+                    .background(MaterialTheme.colors.secondaryVariant)
+            )
+            TrackInfoSection(
+                modifier = Modifier.weight(1f) ,
+                track = track!! ,
+                onMoreClicked = {
 
-                    },
-                    onPreviousClicked = {
+                }
+            )
+            ControlSection(
+                onPlayingToggle = {
+                                  
+                },
+                onPreviousClicked = {
 
-                    },
-                    onNextClick = {
+                },
+                onNextClick = {
+
+                }
+            )
+            CustomButton(
+                modifier = Modifier
+                    .padding(vertical = 15.dp)
+                    .background(Color.Transparent)
+                    .border(
+                        2.dp,
+                        MaterialTheme.colors.secondaryVariant,
+                        MaterialTheme.shapes.large
+                    )
+                    .clickable {
 
                     }
-                )
-                CustomButton(
-                    modifier = Modifier
-                        .padding(vertical = 15.dp)
-                        .background(Color.Transparent)
-                        .border(
-                            2.dp,
-                            MaterialTheme.colors.secondaryVariant,
-                            MaterialTheme.shapes.large
-                        )
-                        .clickable {
+                    .padding(horizontal = 45.dp, vertical = 20.dp),
+                text = "Add to cart",
+                textStyle = TextStyle(
+                    color = MaterialTheme.colors.onBackground,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = 2.sp
+                ),
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.Rounded.Add,
+                        contentDescription = "add",
+                        tint = MaterialTheme.colors.onBackground,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            )
 
-                        }
-                        .padding(horizontal = 45.dp, vertical = 20.dp),
-                    text = "Add to cart",
-                    textStyle = TextStyle(
-                        color = MaterialTheme.colors.onBackground,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        letterSpacing = 2.sp
-                    ),
-                    trailingIcon = {
-                        Icon(
-                            imageVector = Icons.Rounded.Add,
-                            contentDescription = "add",
-                            tint = MaterialTheme.colors.onBackground,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                )
-
-            }
         }
     }
 }
