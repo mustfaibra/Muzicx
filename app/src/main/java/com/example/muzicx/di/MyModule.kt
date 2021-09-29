@@ -1,12 +1,10 @@
 package com.example.muzicx.di
 
 import android.content.Context
-import androidx.lifecycle.ViewModelProvider
 import androidx.room.Room
 import com.example.muzicx.DataRepo
 import com.example.muzicx.api.ApiServices
 import com.example.muzicx.room.RoomDb
-import com.example.muzicx.viewmodel.ParentViewModel
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,13 +21,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object MyModule{
-
-//    @Provides
-//    @Singleton
-//    fun provideParentViewModel(@ApplicationContext cxt: Context) : ParentViewModel{
-//        return ViewModelProvider(cxt
-//        ).get(ParentViewModel::class.java)
-//    }
 
     @Provides
     @Singleton

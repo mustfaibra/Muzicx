@@ -10,12 +10,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PlayerScreenVM @Inject constructor(
-    repo: DataRepo,
-    private var parentViewModel: ParentViewModel
+    repo: DataRepo
 ) : ViewModel(){
-
+    private var _track = MutableLiveData<MyTrack>()
     val track: LiveData<MyTrack>
     get(){
-        return parentViewModel.track
+        return _track
+    }
+
+    fun setSongToPlay(track: MyTrack){
+        _track.value = track
     }
 }

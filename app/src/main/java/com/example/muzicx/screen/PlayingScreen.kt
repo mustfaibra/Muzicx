@@ -26,14 +26,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.rememberImagePainter
 import coil.transform.CircleCropTransformation
 import com.example.muzicx.CustomButton
 import com.example.muzicx.R
 import com.example.muzicx.model.MyTrack
-import com.example.muzicx.viewmodel.ParentViewModel
 import com.example.muzicx.viewmodel.PlayerScreenVM
 
 @Composable
@@ -41,8 +39,7 @@ fun PlayScreen(
     navController: NavHostController,
     playerVM: PlayerScreenVM = hiltViewModel()
 ){
-    val parentVM = viewModel<ParentViewModel>()
-    val track by parentVM.track.observeAsState()
+    val track by playerVM.track.observeAsState()
 
     Box(modifier = Modifier
         .fillMaxSize()
