@@ -17,7 +17,8 @@ import kotlin.random.Random
 
 @HiltViewModel
 class ArtistDetailsVM @Inject constructor(
-    private var repo: DataRepo
+    private var repo: DataRepo,
+    private var parentViewModel: ParentViewModel
 ) : ViewModel() {
 
     private var _details = MutableLiveData<ArtistDetails>()
@@ -87,5 +88,9 @@ class ArtistDetailsVM @Inject constructor(
                 error.value = response.message!!
             }
         }
+    }
+
+    fun setSongToPlay(track: MyTrack) {
+        parentViewModel.setTrackToPlay(track)
     }
 }

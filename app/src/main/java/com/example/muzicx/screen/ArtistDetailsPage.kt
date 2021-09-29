@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.rememberImagePainter
 import coil.transform.CircleCropTransformation
@@ -38,6 +39,7 @@ import com.example.muzicx.TrackItem
 import com.example.muzicx.model.*
 import com.example.muzicx.sealed.Screen
 import com.example.muzicx.viewmodel.ArtistDetailsVM
+import com.example.muzicx.viewmodel.ParentViewModel
 import com.example.muzicx.viewmodel.PlayerScreenVM
 
 @Composable
@@ -243,8 +245,9 @@ fun ReviewItem(
 fun SongsTab(
     tracks: MutableList<MyTrack>,
     navController: NavHostController,
-    playerScreenVM: PlayerScreenVM = hiltViewModel()
+    detailsVM: ArtistDetailsVM = hiltViewModel()
 ) {
+    val parentVM = viewModel<ParentViewModel>()
     LazyColumn(
         state = rememberLazyListState()
     ){
@@ -262,7 +265,7 @@ fun SongsTab(
                 },
                 onTrackSelected = {
                     // go to track player page ...
-                    playerScreenVM.setSongToPlay(track = track)
+                    parentVM.setTrackToPlay(track = track)
                     navController.navigate(Screen.Player.route)
                 },
                 onCartClicked = {
