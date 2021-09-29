@@ -23,7 +23,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -33,12 +32,11 @@ import coil.transform.CircleCropTransformation
 import com.example.muzicx.CustomButton
 import com.example.muzicx.R
 import com.example.muzicx.model.MyTrack
-import com.example.muzicx.ui.theme.MuzicxTheme
 import com.example.muzicx.viewmodel.PlayerScreenVM
 
 @Composable
 fun PlayScreen(
-    navcontroller: NavHostController,
+    navController: NavHostController,
     playerVM: PlayerScreenVM = hiltViewModel()
 ){
     val track by playerVM.track.observeAsState()
@@ -73,7 +71,7 @@ fun PlayScreen(
             )
             ControlSection(
                 onPlayingToggle = {
-                                  
+
                 },
                 onPreviousClicked = {
 
@@ -127,19 +125,12 @@ fun TrackInfoSection(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceAround
     ) {
-        Image(
-            painter = rememberImagePainter(
-                data = track.cover,
-                builder = {
-                    transformations(CircleCropTransformation())
-                }
-            ),
-            contentDescription = "image",
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .clip(CircleShape),
-            contentScale = ContentScale.Crop
+                .clip(CircleShape)
+                .background(track.cover),
         )
         Spacer(modifier = Modifier.height(15.dp))
         Column {

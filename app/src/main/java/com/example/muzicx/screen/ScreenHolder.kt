@@ -118,6 +118,9 @@ fun HolderPage(){
                             navHostController = navHostController
                         )
                     }
+                    composable(route = Screen.Player.route){
+                        PlayScreen(navController = navHostController)
+                    }
                 }
             }
         }
