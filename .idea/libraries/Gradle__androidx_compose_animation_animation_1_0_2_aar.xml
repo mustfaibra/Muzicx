@@ -4,6 +4,9 @@
       <root url="jar://$USER_HOME$/.gradle/caches/transforms-3/efbb1f2aa9ecd1594d2913e063bbf165/transformed/jetified-animation-1.0.2/jars/classes.jar!/" />
       <root url="file://$USER_HOME$/.gradle/caches/transforms-3/efbb1f2aa9ecd1594d2913e063bbf165/transformed/jetified-animation-1.0.2/res" />
       <root url="file://$USER_HOME$/.gradle/caches/transforms-3/efbb1f2aa9ecd1594d2913e063bbf165/transformed/jetified-animation-1.0.2/AndroidManifest.xml" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/cea02f062f8dbdf9f0af5bcf3ff368d5/transformed/jetified-animation-1.0.2/res" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-3/cea02f062f8dbdf9f0af5bcf3ff368d5/transformed/jetified-animation-1.0.2/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/cea02f062f8dbdf9f0af5bcf3ff368d5/transformed/jetified-animation-1.0.2/AndroidManifest.xml" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>

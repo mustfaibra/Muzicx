@@ -43,14 +43,16 @@ fun NavigatorPage(
     navigatorVM: NavigatorPageVM = hiltViewModel(),
 ){
 
-    val genres by navigatorVM.getGenres().let {
-        navigatorVM.genres.observeAsState()
-    }
+    val genres by navigatorVM.genres.observeAsState()
     val loading by remember {
         navigatorVM.loading
     }
     val error by remember {
         navigatorVM.error
+    }
+
+    if (loading) {
+        navigatorVM.getGenres()
     }
 
     Column(modifier = Modifier
@@ -67,12 +69,11 @@ fun NavigatorPage(
 
         Text(
             text = "Find the best music\nfor your banger",
-            style = MaterialTheme.typography.h5,
+            style = MaterialTheme.typography.h2,
             textAlign = TextAlign.Start,
-            color = MaterialTheme.colors.onBackground,
-            fontWeight =FontWeight.Medium,
+            color = MaterialTheme.colors.onBackground.copy(alpha = 0.8f),
         )
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(40.dp))
         CustomTextField(
             modifier = Modifier
                 .fillMaxWidth()

@@ -11,9 +11,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -30,7 +32,7 @@ val bottomNavItems = listOf(
     Screen.Chat,
     Screen.Profile
 )
-val startDestination = Screen.Navigator
+val startDestination = Screen.Splash
 
 @ExperimentalFoundationApi
 @Composable
@@ -42,6 +44,7 @@ fun HolderPage(){
         ) {
             val navHostController = rememberNavController()
             val scaffoldState = rememberScaffoldState()
+            var activeIndex by remember { mutableStateOf(0) }
             var shouldShowMainScaffoldComposables by remember {
                 mutableStateOf(true)
             }
@@ -56,13 +59,16 @@ fun HolderPage(){
                 bottomBar = {
                     if (shouldShowMainScaffoldComposables) {
                         BottomBar(
-                            onActiveNavItemChanged = { activeIndex->
-                                navHostController.navigate(bottomNavItems[activeIndex].route){
+                            activeIndex = activeIndex,
+                            onActiveNavItemChanged = { newActiveIndex ->
+                                activeIndex = newActiveIndex
+                                navHostController.navigate(bottomNavItems[activeIndex].route) {
                                     // clear our backstack except our home screen
-                                    popUpTo(Screen.Home.route){
+                                    popUpTo(Screen.Home.route) {
                                         saveState = true
                                     }
-                                    launchSingleTop = true // to keep only instance of this route in our backstack
+                                    launchSingleTop =
+                                        true // to keep only instance of this route in our backstack
                                     restoreState = true // restore saved screen's state if exist
                                 }
                             }
@@ -70,8 +76,15 @@ fun HolderPage(){
                     }
                 }
             ) {
-
-                NavHost(navController = navHostController , startDestination = startDestination.route){
+                NavHost(
+                    navController = navHostController,
+                    startDestination = startDestination.route,
+                    modifier = Modifier
+                        .padding(bottom = if (shouldShowMainScaffoldComposables) 100.dp else 0.dp),
+                ){
+                    composable(Screen.Splash.route){
+                        SplashScreen(controller = navHostController)
+                    }
                     composable(Screen.Home.route){
                         HomePage()
                     }
@@ -170,35 +183,31 @@ fun MainHomeTopBar(
 
 @Composable
 fun BottomBar(
+    activeIndex: Int,
     onActiveNavItemChanged: (currentItemIndex: Int) -> Unit = {}
 ){
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .background(color = MaterialTheme.colors.secondary)
-            .padding(10.dp)
+            .padding(15.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(MaterialTheme.shapes.large)
                 .background(color = MaterialTheme.colors.background)
-                .padding(horizontal = 10.dp),
+                .padding(10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceAround
+            horizontalArrangement = Arrangement.SpaceBetween
         ){
-            var currentItemIndex by remember{
-                mutableStateOf(1)
-            }
             bottomNavItems.forEachIndexed{ index, screen->
                 BottomNavItem(
-                    modifier = Modifier.weight(1f),
                     screen = screen ,
-                    current = index == currentItemIndex,
+                    current = index == activeIndex,
                     onItemSelect = {
-                        if (index != currentItemIndex) {
-                            currentItemIndex = index
-                            onActiveNavItemChanged(currentItemIndex)
+                        if (index != activeIndex) {
+                            onActiveNavItemChanged(index)
                         }
                     }
                 )
@@ -207,38 +216,28 @@ fun BottomBar(
     }
 }
 
+@Preview
 @Composable
 fun BottomNavItem(
     modifier: Modifier = Modifier,
     screen: Screen = startDestination,
     current: Boolean = true,
-
     onItemSelect: ()-> Unit = {}
 ){
-    val activeColor = MaterialTheme.colors.primary
-    val inActiveColor = MaterialTheme.colors.secondaryVariant
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceAround,
+    Box(
         modifier = modifier
-            .clip(CircleShape)
+            .clip(shape = MaterialTheme.shapes.medium)
+            .background(color = if (current) MaterialTheme.colors.primary else Color.Transparent)
             .clickable {
                 onItemSelect()
             }
-            .padding(vertical = 7.5.dp)
-    ) {
+            .padding(5.dp)
+    ){
         Image(
-            modifier = Modifier.size(20.dp),
+            modifier = Modifier.size( if(current) 36.dp else 24.dp ).align(Alignment.Center),
             painter = painterResource(id = screen.icon),
             contentDescription = screen.title,
-            colorFilter = ColorFilter.tint(color = if (current) activeColor else inActiveColor)
-        )
-        Spacer(modifier = Modifier.height(5.dp))
-        Text(
-            text = screen.title,
-            style = MaterialTheme.typography.body2,
-            color = if (current) activeColor else inActiveColor
+            colorFilter = ColorFilter.tint(color = if (current) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onBackground)
         )
     }
 }

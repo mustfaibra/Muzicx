@@ -1,7 +1,10 @@
-package com.curiousdev.composeplayground.dynamicreceipt.custom
-
-import android.content.Context
-import android.graphics.Bitmap
-import android.view.View
-import android.view.ViewTreeObserver
-import android.view.ViewTreeObs
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties

@@ -9,22 +9,25 @@ data class Artist(
     @SerializedName("name")
     val name: String,
     @SerializedName("picture")
-    val picture: String,
+    val picture: String = "",
     @SerializedName("picture_big")
-    val pictureBig: String,
+    val pictureBig: String = "",
     @SerializedName("picture_medium")
-    val pictureMedium: String,
+    val pictureMedium: String = "",
     @SerializedName("picture_small")
-    val pictureSmall: String,
+    val pictureSmall: String = "",
     @SerializedName("picture_xl")
-    val pictureXl: String,
+    val pictureXl: String = "",
     @SerializedName("tracklist")
-    val tracklist: String,
+    val tracklist: String = "",
     @SerializedName("type")
     val type: String
 ){
-    val fans: Int
-    get() {
-        return (Math.random()*100000).toInt()
+    var fans: Int = 0
+    get(){
+        if(field == 0){
+            field = (Math.random()*100000).toInt()
+        }
+        return field
     }
 }

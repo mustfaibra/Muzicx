@@ -1,5 +1,6 @@
 package com.example.muzicx.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -13,12 +14,16 @@ import com.example.muzicx.sealed.ApiResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.math.log
 import kotlin.random.Random
 
 @HiltViewModel
 class ArtistDetailsVM @Inject constructor(
     private var repo: DataRepo
 ) : ViewModel() {
+    val TAG = "ArtistViewModel"
+    private val _cart = MutableLiveData<MutableList<MyTrack>>(mutableListOf())
+    val cart: LiveData<MutableList<MyTrack>> = _cart
 
     private var _details = MutableLiveData<ArtistDetails>()
     val details: LiveData<ArtistDetails>
@@ -29,6 +34,7 @@ class ArtistDetailsVM @Inject constructor(
     var loading = mutableStateOf(true)
 
     fun getArtistDetails(id: Int) {
+        Log.d(TAG, "getArtistDetails: getting artist details ... ")
         viewModelScope.launch {
             val response = repo.getArtist(id)
             if(response is ApiResponse.Success ){
@@ -86,6 +92,18 @@ class ArtistDetailsVM @Inject constructor(
                 loading.value = false
                 error.value = response.message!!
             }
+        }
+    }
+
+    fun updateCart(track: MyTrack, alreadyAdded: Boolean) {
+        if (alreadyAdded) {
+            // its already there , we should remove it
+            Log.d(TAG, "updateCart: removing")
+            _cart.value?.remove(track)
+        } else {
+            // not in cart currently, we should add it :)
+            Log.d(TAG,"UpdateCart: adding")
+            _cart.value?.add(track)
         }
     }
 }

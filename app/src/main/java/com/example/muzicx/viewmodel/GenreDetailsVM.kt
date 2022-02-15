@@ -19,7 +19,7 @@ class GenreDetailsVM @Inject constructor(
 ) : ViewModel(){
     val loading = mutableStateOf(true)
 
-    var _artists = MutableLiveData<List<Artist>>()
+    private var _artists = MutableLiveData<List<Artist>>()
     val artists = _artists
     val error = mutableStateOf("")
 

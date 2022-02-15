@@ -7,16 +7,21 @@ import com.example.muzicx.model.MyTrack
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
+/**
+ * A View model with hiltViewModel annotation that is used to access this view model everywhere needed
+ */
 @HiltViewModel
 class ParentViewModel @Inject constructor() : ViewModel(){
     // the song that to be played in player screen
-    private var _track = MutableLiveData<MyTrack>()
-    val track: LiveData<MyTrack>
+    var songToPlayIndex = 0
+    private var _tracks = MutableLiveData<List<MyTrack>>()
+    val tracks: LiveData<List<MyTrack>>
+
     get() {
-        return _track
+        return _tracks
     }
-    fun setTrackToPlay(track: MyTrack){
-        _track.value = track
+    fun setQueue(tracks: List<MyTrack>){
+        _tracks.value = tracks
     }
 
 }

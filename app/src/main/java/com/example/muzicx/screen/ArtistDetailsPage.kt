@@ -1,5 +1,6 @@
 package com.example.muzicx.screen
 
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,27 +19,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.rememberImagePainter
 import coil.transform.CircleCropTransformation
-import com.example.muzicx.CustomButton
+import com.example.muzicx.*
 import com.example.muzicx.R
-import com.example.muzicx.SecondaryTopBar
-import com.example.muzicx.TabItem
-import com.example.muzicx.TrackItem
 import com.example.muzicx.model.*
 import com.example.muzicx.sealed.Screen
 import com.example.muzicx.viewmodel.ArtistDetailsVM
-import com.example.muzicx.viewmodel.PlayerScreenVM
+import com.example.muzicx.viewmodel.ParentViewModel
 
 @Composable
 fun ArtistDetailsPage(
@@ -51,25 +53,29 @@ fun ArtistDetailsPage(
             .fillMaxSize()
             .background(MaterialTheme.colors.background),
     ){
-        val loading by remember {
-            detailsVM.loading
-        }
-        val error by remember {
-            detailsVM.error
-        }
+        val loading by remember { detailsVM.loading }
+        val error by remember { detailsVM.error }
         val details by detailsVM.details.observeAsState()
+        var menuExpanded by remember { mutableStateOf(false) }
 
-        if (loading) {
+        if (loading)
             detailsVM.getArtistDetails(artistId)
-        }
+
         SecondaryTopBar(
             title = "Artist's Profile",
+            expanded = menuExpanded,
+            options = listOf(
+                OptionsMenuItem(1,"Share",R.drawable.ic_share),
+                OptionsMenuItem(2,"Like",R.drawable.ic_like),
+                OptionsMenuItem(3,"Dislike",R.drawable.ic_dislike),
+                OptionsMenuItem(4,"Report",R.drawable.ic_report),
+            ),
             onBackClicked = {
                 navHostController.popBackStack()
             },
             onOptionClicked = {
-
-            }
+                menuExpanded = !menuExpanded
+            },
         )
         // Here is the actual content of the page :
         Box(modifier = Modifier.fillMaxSize()) {
@@ -243,32 +249,138 @@ fun ReviewItem(
 fun SongsTab(
     tracks: MutableList<MyTrack>,
     navController: NavHostController,
-    playerScreenVM: PlayerScreenVM = hiltViewModel()
+    detailsVM: ArtistDetailsVM = hiltViewModel()
 ) {
+    val parentVM: ParentViewModel = viewModel(LocalContext.current as ComponentActivity)
+    var itemExpandedMenuIndex by remember { mutableStateOf(-1) }
+
     LazyColumn(
         state = rememberLazyListState()
     ){
-        items(tracks){track->
-
-            var isAddedToCart by remember {
-                mutableStateOf(false)
+        itemsIndexed(tracks){index,track->
+            val isAddedToCart = remember {
+                mutableStateOf(detailsVM.cart.value?.contains(track) ?: false)
             }
 
             TrackItem(
                 track = track,
-                isAddedToCart = isAddedToCart,
+                isAddedToCart = isAddedToCart.value,
+                isMenuExpanded = index == itemExpandedMenuIndex,
                 onMenuClicked = {
-                    // show option menu ...
+                    itemExpandedMenuIndex = if(itemExpandedMenuIndex == index) -1 else index
+                },
+                onMenuOptionSelected = {
+                    itemExpandedMenuIndex = -1
                 },
                 onTrackSelected = {
                     // go to track player page ...
-                    playerScreenVM.setSongToPlay(track = track)
+                    parentVM.setQueue(tracks = tracks)
+                    parentVM.songToPlayIndex = index
                     navController.navigate(Screen.Player.route)
                 },
                 onCartClicked = {
                     // update cart state ...
-                    isAddedToCart = !it
+                    detailsVM.updateCart(track = track, alreadyAdded = it)
+                    isAddedToCart.value = !it
                 }
+            )
+        }
+    }
+}
+
+@Composable
+fun TrackItem(
+    track: MyTrack,
+    isAddedToCart: Boolean ,
+    isMenuExpanded: Boolean ,
+    onMenuClicked: ()-> Unit ,
+    onMenuOptionSelected: (option: OptionsMenuItem) -> Unit,
+    onTrackSelected: ()-> Unit,
+    onCartClicked: (isAddedToCart: Boolean) -> Unit
+){
+    val options = listOf(
+        OptionsMenuItem(1,"Share",R.drawable.ic_share),
+        OptionsMenuItem(2,"Add to playlist",R.drawable.ic_add_playlist),
+        OptionsMenuItem(3,"Like",R.drawable.ic_like),
+        OptionsMenuItem(4,"Dislike",R.drawable.ic_dislike),
+        OptionsMenuItem(5,"More like this",R.drawable.ic_justify),
+    )
+    Row(
+        modifier = Modifier
+            .background(Color.Transparent)
+            .clickable {
+                onTrackSelected()
+            }
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceAround
+    ){
+        Box(
+            modifier = Modifier
+                .size(50.dp)
+                .clip(CircleShape)
+                .background(track.cover),
+        )
+        Spacer(modifier = Modifier.width(15.dp))
+        Column(
+            modifier = Modifier
+                .weight(1f),
+            verticalArrangement = Arrangement.SpaceAround
+        ) {
+            Text(
+                text = track.title,
+                style = MaterialTheme.typography.body1,
+                color = MaterialTheme.colors.onBackground,
+            )
+            Text(
+                text = buildAnnotatedString {
+                    append(track.artist.name)
+                    append("   ")
+                    withStyle(TextStyle(color = MaterialTheme.colors.onBackground).toSpanStyle()){
+                        append("$5")
+                    }
+                },
+                style = MaterialTheme.typography.body2,
+                color = MaterialTheme.colors.secondaryVariant,
+            )
+        }
+        Icon(
+            painter = painterResource(id = R.drawable.ic_cart),
+            modifier = Modifier
+                .size(30.dp)
+                .clip(CircleShape)
+                .clickable {
+                    onCartClicked(isAddedToCart)
+                }
+                .padding(3.dp),
+            contentDescription = "cart",
+            tint = if (isAddedToCart) MaterialTheme.colors.primary else MaterialTheme.colors.secondaryVariant
+        )
+        Spacer(modifier = Modifier.width(10.dp))
+        Box(){
+            Icon(
+                painter = painterResource(id = R.drawable.ic_more),
+                modifier = Modifier
+                    .size(27.dp)
+                    .border(
+                        width = 2.dp,
+                        shape = CircleShape,
+                        color = MaterialTheme.colors.secondaryVariant
+                    )
+                    .clip(CircleShape)
+                    .clickable {
+                        onMenuClicked()
+                    }
+                    .padding(5.dp),
+                contentDescription = "menu",
+                tint = MaterialTheme.colors.secondaryVariant
+            )
+            OptionsMenu(
+                expanded = isMenuExpanded,
+                options = options,
+                onMenuStateChanged = { onMenuClicked() },
+                onMenuOptionSelected = { onMenuOptionSelected(it) }
             )
         }
     }
@@ -385,19 +497,18 @@ fun ProfileHeaderSection(
         ) {
 
             Text(
-                text = "Pro Seller".capitalize(Locale("en")),
-                modifier= Modifier
-                    .border(2.dp, MaterialTheme.colors.primary, MaterialTheme.shapes.small)
-                    .padding(horizontal = 15.dp, vertical = 7.dp),
-                color = MaterialTheme.colors.primary,
-                style = MaterialTheme.typography.body2
+                text = artist.name,
+                style = MaterialTheme.typography.h3,
+                color = MaterialTheme.colors.onBackground,
             )
             Text(
-                text = artist.name,
-                style = MaterialTheme.typography.h6,
-                color = MaterialTheme.colors.onBackground,
-                modifier = Modifier
-                    .padding(vertical = 5.dp)
+                text = "Pro Seller".capitalize(Locale("en")),
+                modifier= Modifier
+                    .padding(top = 7.dp)
+                    .border(2.dp, MaterialTheme.colors.primary, MaterialTheme.shapes.small)
+                    .padding(horizontal = 15.dp, vertical = 5.dp),
+                color = MaterialTheme.colors.primary,
+                style = MaterialTheme.typography.subtitle2
             )
             Row(
                 modifier = Modifier
@@ -482,7 +593,7 @@ fun ProfileButtonsSection(
 
                 }
                 .padding(horizontal = 30.dp, vertical = 15.dp),
-            text = "Start a chat",
+            text = "Join chat",
             textStyle = TextStyle(
                 color = MaterialTheme.colors.onBackground,
                 fontSize = 16.sp,

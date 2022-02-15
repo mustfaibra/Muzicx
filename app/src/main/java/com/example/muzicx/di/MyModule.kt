@@ -8,6 +8,7 @@ import com.example.muzicx.room.RoomDb
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ActivityContext
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
@@ -26,7 +27,7 @@ object MyModule{
     @Singleton
     fun provideRoomInstance(
         @ApplicationContext context: Context,
-        populateDataCallback: RoomDb.PopulateDataClass
+        populateDataCallback: RoomDb.PopulateDataClass,
     ) : RoomDb{
         return Room.databaseBuilder(context, RoomDb::class.java, "muzicx")
             .fallbackToDestructiveMigration()

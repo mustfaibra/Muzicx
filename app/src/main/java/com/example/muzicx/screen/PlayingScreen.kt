@@ -1,6 +1,10 @@
 package com.example.muzicx.screen
 
-import androidx.compose.foundation.Image
+import androidx.activity.ComponentActivity
+import androidx.compose.animation.core.Easing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,19 +23,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import coil.compose.rememberImagePainter
-import coil.transform.CircleCropTransformation
 import com.example.muzicx.CustomButton
+import com.example.muzicx.OptionsMenu
 import com.example.muzicx.R
 import com.example.muzicx.model.MyTrack
+import com.example.muzicx.model.OptionsMenuItem
+import com.example.muzicx.viewmodel.ParentViewModel
 import com.example.muzicx.viewmodel.PlayerScreenVM
 
 @Composable
@@ -39,7 +45,15 @@ fun PlayScreen(
     navController: NavHostController,
     playerVM: PlayerScreenVM = hiltViewModel()
 ){
-    val track by playerVM.track.observeAsState()
+    val parentVM: ParentViewModel = viewModel(LocalContext.current as ComponentActivity)
+    val tracks by parentVM.tracks.observeAsState()
+    playerVM.setTrackQueue(tracks = tracks!!)
+
+    val currentTrackIndex by remember {
+        playerVM.currentPlayingIndex
+    }
+
+    val track = playerVM.getTrackPlaying(currentTrackIndex)
 
     Box(modifier = Modifier
         .fillMaxSize()
@@ -49,62 +63,60 @@ fun PlayScreen(
                 .padding(top = 30.dp)
                 .fillMaxSize()
                 .clip(RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp))
-                .background(MaterialTheme.colors.secondary)
+                .background(track.cover.copy(alpha = 0.3f))
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            val isPlaying by remember { playerVM.playing }
+            var favorited by remember{ mutableStateOf(false) }
+            var isAddedToCart by remember { mutableStateOf(false) }
             Spacer(
                 modifier = Modifier
-                    .padding(top = 10.dp, bottom = 50.dp)
+                    .padding(top = 10.dp)
                     .height(5.dp)
                     .width(50.dp)
                     .clip(RoundedCornerShape(100.dp))
-                    .background(MaterialTheme.colors.secondaryVariant)
+                    .background(track.cover)
             )
             TrackInfoSection(
                 modifier = Modifier.weight(1f) ,
-                track = track!! ,
-                onMoreClicked = {
-
+                track = track ,
+                progress = 0f,
+                favorited = favorited,
+                onFavoriteClicked = {
+                    favorited = !favorited
                 }
             )
             ControlSection(
+                color = track.cover,
+                isPlaying = isPlaying,
                 onPlayingToggle = {
-
+                    playerVM.playing.value = !isPlaying
                 },
                 onPreviousClicked = {
-
+                    isAddedToCart = false
+                    playerVM.playPrevious()
                 },
                 onNextClick = {
-
+                    isAddedToCart = false
+                    playerVM.playNext()
                 }
             )
             CustomButton(
                 modifier = Modifier
                     .padding(vertical = 15.dp)
-                    .background(Color.Transparent)
-                    .border(
-                        2.dp,
-                        MaterialTheme.colors.secondaryVariant,
-                        MaterialTheme.shapes.large
-                    )
-                    .clickable {
-
-                    }
-                    .padding(horizontal = 45.dp, vertical = 20.dp),
-                text = "Add to cart",
-                textStyle = TextStyle(
-                    color = MaterialTheme.colors.onBackground,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    letterSpacing = 2.sp
-                ),
+                    .clip(MaterialTheme.shapes.large)
+                    .background(track.cover)
+                    .clickable { isAddedToCart = !isAddedToCart }
+                    .padding(horizontal = 35.dp, vertical = 20.dp),
+                text = if(isAddedToCart) "Added to cart" else "Add to cart",
+                textStyle = MaterialTheme.typography.h4.copy(color = MaterialTheme.colors.background),
                 trailingIcon = {
                     Icon(
                         imageVector = Icons.Rounded.Add,
                         contentDescription = "add",
-                        tint = MaterialTheme.colors.onBackground,
+                        tint = MaterialTheme.colors.background,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -118,36 +130,49 @@ fun PlayScreen(
 fun TrackInfoSection(
     modifier: Modifier = Modifier,
     track: MyTrack,
-    onMoreClicked: ()-> Unit
+    progress: Float,
+    favorited: Boolean,
+    onFavoriteClicked: ()-> Unit,
 ){
+    val options = listOf(
+        OptionsMenuItem(1,"Share",R.drawable.ic_share),
+        OptionsMenuItem(2,"Add to playlist",R.drawable.ic_add_playlist),
+        OptionsMenuItem(3,"Like",R.drawable.ic_like),
+        OptionsMenuItem(4,"Dislike",R.drawable.ic_dislike),
+        OptionsMenuItem(5,"More like this",R.drawable.ic_justify),
+    )
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceAround
     ) {
+        /** Track cover */
         Box(
             modifier = Modifier
-                .fillMaxWidth()
+                .weight(1f)
                 .aspectRatio(1f)
                 .clip(CircleShape)
                 .background(track.cover),
         )
         Spacer(modifier = Modifier.height(15.dp))
+        /** Track info */
         Column {
+            /** Name , artist , and fav & option icons */
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ){
+                var isMenuExpanded by remember { mutableStateOf(false) }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = track.title,
-                        style = MaterialTheme.typography.h5,
+                        style = MaterialTheme.typography.h3,
                         color = MaterialTheme.colors.onBackground
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
                         text = track.artist.name,
-                        style = MaterialTheme.typography.h6,
+                        style = MaterialTheme.typography.h4,
                         color = MaterialTheme.colors.secondaryVariant
                     )
                 }
@@ -156,9 +181,6 @@ fun TrackInfoSection(
                     horizontalArrangement = Arrangement.SpaceAround,
                     verticalAlignment = Alignment.CenterVertically
                 ){
-                    var favorited by remember{
-                        mutableStateOf(false)
-                    }
                     Icon(
                         painter = painterResource(
                             if(favorited) R.drawable.ic_favorite
@@ -168,44 +190,59 @@ fun TrackInfoSection(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
-                            .padding(5.dp)
                             .clickable {
-                                favorited = !favorited
-                            },
-                        tint = MaterialTheme.colors.secondaryVariant
+                                onFavoriteClicked()
+                            }
+                            .padding(5.dp),
+                        tint = track.cover
                     )
                     Spacer(modifier = Modifier.width(20.dp))
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_more),
-                        contentDescription = "more",
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .padding(5.dp)
-                            .clickable {
-                                onMoreClicked()
-                            }
-                            .border(2.dp, MaterialTheme.colors.secondaryVariant, CircleShape)
-                            .padding(3.dp),
-                        tint = MaterialTheme.colors.secondaryVariant
-                    )
+                    Box{
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_more),
+                            contentDescription = "more",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .clickable {
+                                    isMenuExpanded = !isMenuExpanded
+                                },
+                            tint = track.cover
+                        )
+                        OptionsMenu(
+                            expanded = isMenuExpanded,
+                            options = options,
+                            onMenuStateChanged = { isMenuExpanded = !isMenuExpanded },
+                            onMenuOptionSelected = { isMenuExpanded = !isMenuExpanded }
+                        )
+                    }
 
                 }
             }
+            /** Progress bar with time indicators */
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
+                var currentProgress by remember { mutableStateOf(progress)}
+                val time = track.duration
+                val animatedProgress by animateFloatAsState(
+                    targetValue = currentProgress,
+                    animationSpec = tween(
+                        durationMillis = time * 1000,
+                        easing = LinearEasing
+                    )
+                )
                 LinearProgressIndicator(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(5.dp)
                         .clip(CircleShape),
-                    backgroundColor = MaterialTheme.colors.secondaryVariant,
-                    color = MaterialTheme.colors.onBackground,
-                    progress = 0.33f
+                    backgroundColor = MaterialTheme.colors.onBackground,
+                    color = track.cover,
+                    progress = animatedProgress
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 Row(
@@ -229,6 +266,8 @@ fun TrackInfoSection(
                     )
 
                 }
+                /** Now we should animate our linear progress bar */
+                currentProgress = 1f
             }
         }
     }
@@ -257,7 +296,9 @@ fun longToTimeConverter(length: Int): String {
 @Composable
 fun ControlSection(
     modifier: Modifier = Modifier,
-    onPlayingToggle: (isPlaying: Boolean) -> Unit,
+    color: Color = Color.White,
+    isPlaying: Boolean,
+    onPlayingToggle: () -> Unit,
     onPreviousClicked: () -> Unit,
     onNextClick: () -> Unit
 ) {
@@ -269,30 +310,29 @@ fun ControlSection(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ){
-        var isPlaying by remember {
-            mutableStateOf(true)
-        }
         Icon(
             painter = painterResource(id = R.drawable.ic_save),
-            tint = MaterialTheme.colors.secondaryVariant,
+            tint = color.copy(alpha = 0.7f),
             contentDescription = "save",
             modifier = Modifier
                 .size(35.dp)
                 .clip(CircleShape)
+                .clickable {
+
+                }
                 .padding(5.dp)
-                .clip(CircleShape)
         )
         Icon(
             painter = painterResource(id = R.drawable.ic_previous),
-            tint = MaterialTheme.colors.onBackground,
+            tint = color,
             contentDescription = "previous",
             modifier = Modifier
                 .size(45.dp)
                 .clip(CircleShape)
-                .padding(5.dp)
                 .clickable {
                     onPreviousClicked()
                 }
+                .padding(5.dp)
         )
         Box(
             contentAlignment = Alignment.Center,
@@ -300,9 +340,9 @@ fun ControlSection(
                 .size(45.dp)
                 .clip(CircleShape)
                 .clickable {
-                    isPlaying = !isPlaying
+                    onPlayingToggle()
                 }
-                .background(MaterialTheme.colors.onBackground)
+                .background(color = color)
         ){
             Icon(
                 painter = painterResource(
@@ -312,36 +352,35 @@ fun ControlSection(
                         R.drawable.ic_play
                     }
                 ),
-                tint = MaterialTheme.colors.background,
+                tint = MaterialTheme.colors.onBackground,
                 contentDescription = "toggle",
                 modifier = Modifier
                     .size(30.dp)
-                    .clickable {
-                        onPlayingToggle(isPlaying)
-                    }
             )
         }
         Icon(
             painter = painterResource(id = R.drawable.ic_next),
-            tint = MaterialTheme.colors.onBackground,
+            tint = color,
             contentDescription = "next",
             modifier = Modifier
                 .size(45.dp)
                 .clip(CircleShape)
-                .padding(5.dp)
                 .clickable {
                     onNextClick()
                 }
+                .padding(5.dp)
         )
         Icon(
             painter = painterResource(id = R.drawable.ic_lyrics),
-            tint = MaterialTheme.colors.secondaryVariant,
+            tint = color.copy(alpha = 0.7f),
             contentDescription = "lyrics",
             modifier = Modifier
                 .size(35.dp)
                 .clip(CircleShape)
+                .clickable {
+
+                }
                 .padding(5.dp)
-                .clip(CircleShape)
         )
     }
 }

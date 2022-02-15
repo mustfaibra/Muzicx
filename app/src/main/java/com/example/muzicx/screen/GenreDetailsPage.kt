@@ -6,13 +6,15 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -33,9 +35,11 @@ import androidx.navigation.NavHostController
 import coil.compose.rememberImagePainter
 import coil.transform.CircleCropTransformation
 import com.example.muzicx.CustomButton
-import com.example.muzicx.SecondaryTopBar
+import com.example.muzicx.OptionsMenu
 import com.example.muzicx.R
+import com.example.muzicx.SecondaryTopBar
 import com.example.muzicx.model.Artist
+import com.example.muzicx.model.OptionsMenuItem
 import com.example.muzicx.sealed.Screen
 import com.example.muzicx.viewmodel.GenreDetailsVM
 
@@ -69,10 +73,19 @@ fun GenreDetailsPage(
         var artistsCount by remember {
             mutableStateOf(0)
         }
+        var isMenuExpanded by remember { mutableStateOf(false) }
         SecondaryTopBar(
             title = "$genreName's artists",
+            expanded = isMenuExpanded,
+            options = listOf(
+                OptionsMenuItem(1,"Share",R.drawable.ic_share),
+                OptionsMenuItem(2,"Favorite",R.drawable.ic_favorite),
+            ),
             onBackClicked = {
                 navController.popBackStack()
+            },
+            onOptionClicked = {
+                isMenuExpanded = !isMenuExpanded
             }
         )
         Row(
@@ -103,14 +116,12 @@ fun GenreDetailsPage(
             ) {
                 Text(
                     text = genreName,
-                    color = MaterialTheme.colors.primary,
-                    style = MaterialTheme.typography.h5
+                    color = MaterialTheme.colors.onBackground,
+                    style = MaterialTheme.typography.h3
                 )
-                Spacer(modifier = Modifier.height(10.dp))
                 Text(
                     text = if (artistsCount == 0) "" else "$artistsCount artists",
-
-                    color = MaterialTheme.colors.primary,
+                    color = MaterialTheme.colors.primary.copy(alpha = 0.6f),
                     style = MaterialTheme.typography.body1
                 )
             }
@@ -125,13 +136,21 @@ fun GenreDetailsPage(
                     isFollowed = !isFollowed
                 }
                 .padding(horizontal = 30.dp, vertical = 15.dp),
-            text = if (isFollowed) "Unfollow" else "Follow",
+            text = if (isFollowed) "Following" else "Follow",
             textStyle = TextStyle(
                 color = MaterialTheme.colors.background,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 1.sp
             ),
+            trailingIcon = {
+                if(isFollowed) Icon(
+                    imageVector = Icons.Rounded.Check,
+                    contentDescription = "check",
+                    tint = MaterialTheme.colors.onPrimary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         )
         Spacer(modifier = Modifier.height(15.dp))
         Box(
@@ -158,11 +177,13 @@ fun GenreDetailsPage(
             } else {
                 // update artist count
                 artistsCount = artists!!.size
-                // our music list
+
+                // our artists list
                 LazyColumn(
                     state = rememberLazyListState()
                 ){
-                    items(artists!!){artist->
+                    itemsIndexed(artists!!){index,artist->
+                        var itemWithExpandedMenuIndex by remember { mutableStateOf(-1) }
                         ArtistItem(
                             artist = artist,
                             onArtistSelected = {
@@ -171,8 +192,9 @@ fun GenreDetailsPage(
                                     )
                             },
                             onOptionsClicked = {
-
-                            }
+                                itemWithExpandedMenuIndex = if(index == itemWithExpandedMenuIndex) -1 else index
+                            },
+                            isMenuExpanded = index == itemWithExpandedMenuIndex
                         )
                     }
                 }
@@ -185,8 +207,9 @@ fun GenreDetailsPage(
 fun ArtistItem(
     modifier: Modifier = Modifier,
     artist: Artist,
-    onArtistSelected: ()-> Unit ,
-    onOptionsClicked: ()-> Unit
+    isMenuExpanded: Boolean,
+    onOptionsClicked: () -> Unit,
+    onArtistSelected: () -> Unit
 ){
     Row(
         modifier = modifier
@@ -229,18 +252,35 @@ fun ArtistItem(
             )
         }
         Spacer(modifier = Modifier.width(15.dp))
-        Icon(
-            painter = painterResource(id = R.drawable.ic_more),
-            modifier = Modifier
-                .size(30.dp)
-                .border(width = 2.dp, shape = CircleShape, color = MaterialTheme.colors.secondaryVariant)
-                .clip(CircleShape)
-                .clickable {
-                    onOptionsClicked()
-                }
-                .padding(3.dp),
-            contentDescription = "menu",
-            tint = MaterialTheme.colors.secondaryVariant
-        )
+        Box{
+            Icon(
+                painter = painterResource(id = R.drawable.ic_more),
+                modifier = Modifier
+                    .size(30.dp)
+                    .border(
+                        width = 2.dp,
+                        shape = CircleShape,
+                        color = MaterialTheme.colors.secondaryVariant
+                    )
+                    .clip(CircleShape)
+                    .clickable {
+                        onOptionsClicked()
+                    }
+                    .padding(3.dp),
+                contentDescription = "menu",
+                tint = MaterialTheme.colors.secondaryVariant
+            )
+            OptionsMenu(
+                expanded = isMenuExpanded,
+                options = listOf(
+                    OptionsMenuItem(1,"Share",R.drawable.ic_share),
+                    OptionsMenuItem(2,"Like",R.drawable.ic_like),
+                    OptionsMenuItem(3,"Dislike",R.drawable.ic_dislike),
+                    OptionsMenuItem(4,"Report",R.drawable.ic_report),
+                ),
+                onMenuStateChanged = { onOptionsClicked() },
+                onMenuOptionSelected = { onOptionsClicked() }
+            )
+        }
     }
 }

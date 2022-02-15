@@ -5,6 +5,9 @@
       <root url="jar://$USER_HOME$/.gradle/caches/transforms-3/eed9e67e86c969b965e33087b2c65fe8/transformed/jetified-coil-compose-1.3.2/jars/classes.jar!/" />
       <root url="file://$USER_HOME$/.gradle/caches/transforms-3/eed9e67e86c969b965e33087b2c65fe8/transformed/jetified-coil-compose-1.3.2/res" />
       <root url="file://$USER_HOME$/.gradle/caches/transforms-3/eed9e67e86c969b965e33087b2c65fe8/transformed/jetified-coil-compose-1.3.2/AndroidManifest.xml" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/68c99341ebfdf379919bdc5338a48406/transformed/jetified-coil-compose-1.3.2/AndroidManifest.xml" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/68c99341ebfdf379919bdc5338a48406/transformed/jetified-coil-compose-1.3.2/res" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-3/68c99341ebfdf379919bdc5338a48406/transformed/jetified-coil-compose-1.3.2/jars/classes.jar!/" />
     </CLASSES>
     <JAVADOC>
       <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/io.coil-kt/coil-compose/1.3.2/4b70bc3b6df1dd5c984ee78cc770de4956bbc3d3/coil-compose-1.3.2-javadoc.jar!/" />

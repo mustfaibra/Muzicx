@@ -3,6 +3,7 @@ package com.example.muzicx.sealed
 import com.example.muzicx.R
 
 sealed class Screen(val route: String,val title: String,val icon: Int = 0){
+    object Splash: Screen("splash","Splash")
     object Home: Screen("home","Home", R.drawable.ic_home)
     object Navigator: Screen("navigator","Navigator", R.drawable.ic_explore)
     object Chat: Screen("chat","Chat", R.drawable.ic_chat)
